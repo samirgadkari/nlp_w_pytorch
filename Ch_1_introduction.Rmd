@@ -1,0 +1,221 @@
+---
+title: "Ch_1_Introduction"
+author: "Samir Gadkari"
+date: "3/10/2021"
+output: html_document
+---
+
+## Working with both Python and R in Rmarkdown using Reticulate
+
+_This is not a part of the book - I just had to figure it out
+because it was bugging me for some time. It should be in another
+place, but it is so short, that I left it here._
+
+When starting this project, I had to:
+
+  * Run "virtualenv .venv" in the project directory
+  * Run "source .venv/bin/activate" in the project directory
+  * Run "pip install numpy pandas matplotlib" in the virtualenv directory
+  * "install.packages("reticulate")" in the R console
+  * Create a .Rprofile file in the project directory containing:
+    * Sys.setenv(RETICULATE_PYTHON = ".venv/bin/python")
+  * Restart R session so the new environment variable is available
+  * Type reticulate::py_config() in R console to see if it has been
+    correctly setup. If you are asked to install miniconda, just say no.
+    
+To access variables from python in R: py$var_name
+To access variables from R in python: r.var_name
+
+```{r}
+library(reticulate)
+```
+
+```{python}
+import torch
+import numpy as np
+from random import random
+```
+
+```{python}
+n = [random() for i in range(300)]
+```
+
+```{r}
+hist(py$n)
+```
+
+## Creating Tensors
+
+```{python}
+def describe(x):
+  print("Type: {}".format(x.type()))
+  print("Shape: {}".format(x.shape))
+  print("Values: \n{}".format(x))
+  
+describe(torch.Tensor(2, 3)) # Returns a pointer to a block of memory of size
+                             # 2 x 3. The values in that memory block are
+                             # whatever were there before. No initialization
+                             # takes place here.
+```
+```{python}
+describe(torch.rand(2, 3))   # uniform distribution between 0 and 1
+describe(torch.randn(2, 3))  # normal distribution with mean 0, sd 1
+```
+
+Any pytorch method ending in _ is an in-place operation.
+It also returns a pointer to the updated data.
+```{python}
+describe(torch.zeros(2, 3)) # 2 x 3 tensor filled with zeros
+x = torch.ones(2, 3)
+describe(x)
+y = x.fill_(5) # any pytorch method ending in _ is an in-place operation.
+               # It also returns a pointer to the updated data
+describe(x)
+print("y = ", y)
+```
+
+An array or list can also be input to the Tensor() function to create
+the tensor.
+
+```{python}
+x = torch.Tensor([[1., 2., 3.],
+                  [4., 5., 6.]])
+describe(x)
+npy = np.random.rand(2, 3)
+describe(torch.from_numpy(npy)) # notice dtype here is float64, since
+                                # the numpy default output is float64
+```
+
+|function|return type|
+|--------|-----------|
+| torch.Tensor() | Float |
+| torch.FloatTensor() | Float |
+| torch.randn() | Float |
+| torch.LongTensor() | Long |
+| x.long() | Long |
+| torch.tensor([[1, 2],[3, 4]], dtype = torch.int64) | Long |
+| x.float() | Float |
+
+The shape property and the size() method of a tensor gives it's shape/size.
+shape is an alias for size().
+
+## Tensor operations
+
+  * pytorch requirement is that indices are Long tensors
+
+```{python}
+x = torch.randn(2, 3)
+describe(x)
+x + x == torch.add(x, x)
+```
+
+```{python}
+x = torch.arange(6)
+describe(x)
+x = x.view(2, 3)
+describe(x)
+describe(torch.sum(x, dim = 0)) # sum across 0th dimension
+describe(torch.sum(x, dim = 1)) # sum across 1st dimension
+describe(torch.transpose(x, 0, 1)) # transpose x given the two dimensions
+```
+
+## Indexing, slicing, and joining
+
+```{python}
+x = torch.arange(6).view(2, 3)
+describe(x)
+describe(x[:1, :2])
+describe(x[0, 1])
+```
+
+Selects the column dimension (dim = 1). Then selects the indices 0 and 2,
+so the 0th and 2nd columns:
+```{python}
+describe(x)
+indices = torch.LongTensor([0, 2])
+describe(torch.index_select(x, dim = 1, index = indices))
+```
+
+```{python}
+describe(x)
+indices = torch.LongTensor([0, 0])
+describe(torch.index_select(x, dim = 0, index = indices))
+```
+
+```{python}
+describe(x)
+row_indices = torch.arange(2).long()
+col_indices = torch.LongTensor([0, 1])
+describe(x[row_indices, col_indices])
+```
+
+### Joining tensors using concatenation functions
+
+```{python}
+x = torch.arange(6).view(2, 3)
+describe(x)
+torch.cat([x, x], dim = 0)
+torch.cat([x, x], dim = 1)
+```
+
+Notice, when you stack tensors, the dimension given is the dimension
+that will be inserted. Default is dim = 0, which is the outer brackets
+of the tensor.
+dim = 1 are the rows of the tensor, so they will be stacked.
+dim = 2 are the single values inside the row of the tensor, so they are stacked.
+```{python}
+describe(x)
+describe(torch.stack([x, x]))
+describe(torch.stack([x, x], dim = 1))
+describe(torch.stack([x, x], dim = 2))
+```
+### Mathematical operations on tensors
+
+```{python}
+x1 = torch.arange(6, dtype = torch.float32).view(2, 3)
+describe(x1)
+
+x2 = torch.ones(3, 2)
+x2[:, 1] += 1
+describe(x2)
+
+describe(torch.mm(x1, x2))
+```
+
+### Setting up tensors for gradient calculations
+
+```{python}
+x = torch.ones(2, 2, requires_grad = True)
+describe(x)
+print(x.grad is None)
+```
+
+```{python}
+y = (x + 2) * (x + 5) + 3
+describe(y)
+print(x.grad is None)
+```
+
+```{python}
+z = y.mean()
+describe(z)
+z.backward()
+print(x.grad is None)
+```
+The backward pass (called using z.backward()), computes a gradient value
+for a tensor that participated in the forward pass.
+
+To access a tensor's gradient, use z.grad
+
+```{python}
+z.grad
+print()
+y.grad
+print()
+x.grad
+```
+The leaf tensor is the one at the top - in this case x.
+The message calls it the leaf tensor, because during backward(),
+it is the last tensor updated.
+
+
