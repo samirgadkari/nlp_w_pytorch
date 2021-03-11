@@ -327,8 +327,7 @@ b = torch.rand(5, 4)
 # Then we expand with:
 #   - 0th dimension size is same as a's 0th dimension size
 #   - rest of the dimensions are the same as b's dimensions
-x = torch.bmm(a, 
-              b.unsqueeze(0).expand(a.size(0), *b.size()))
+x = torch.bmm(a, b.unsqueeze(0).expand(a.size(0), *b.size()))
 describe(x)
 ```
 
