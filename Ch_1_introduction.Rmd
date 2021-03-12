@@ -13,12 +13,9 @@ place, but it is so short, that I left it here._
 
 When starting this project, I had to:
 
-  * Run "virtualenv .venv" in the project directory
-  * Run "source .venv/bin/activate" in the project directory
-  * Run "pip install numpy pandas matplotlib" in the virtualenv directory
   * "install.packages("reticulate")" in the R console
   * Create a .Rprofile file in the project directory containing:
-    * Sys.setenv(RETICULATE_PYTHON = ".venv/bin/python")
+    * Sys.setenv(RETICULATE_PYTHON = "/usr/local/bin/python")
   * Restart R session so the new environment variable is available
   * Type reticulate::py_config() in R console to see if it has been
     correctly setup. If you are asked to install miniconda, just say no.
