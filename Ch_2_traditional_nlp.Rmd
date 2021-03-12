@@ -1,0 +1,39 @@
+---
+title: "Ch_2 A quick tour of traditional NLP"
+author: "Samir Gadkari"
+date: "3/11/2021"
+output: html_document
+---
+
+```{r}
+library(reticulate)
+```
+
+```{python}
+import spacy
+```
+
+Corpus (plural Corpora): Raw text + metadata related to text.
+Tokens: For english, whitespace delimited character groups.
+Types: Unique tokens present in a corpus
+
+It is very important to get the right level of tokens to process.
+For example the "-ol" in Methanol implies that it is an alcohol.
+If you want your neural network to use this information, you
+should maybe break the word into Methan and ol?
+
+Lemmas as root forms of the word. ex. fly is a lemma for
+flying, flies, flew, flown, etc. To keep dimensionality of the
+vector representation low, you should lemmatize your tokens.
+
+```{python}
+nlp = spacy.load("en_core_web_sm")
+
+doc = nlp(u"he was running late")
+for token in doc:
+  print("{} ---> {}".format(token, token.lemma_))
+
+# For some reason, we need a blank line after a line that is
+# indented (ex. print line above).
+```
+
