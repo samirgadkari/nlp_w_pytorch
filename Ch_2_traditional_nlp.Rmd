@@ -26,6 +26,10 @@ Lemmas as root forms of the word. ex. fly is a lemma for
 flying, flies, flew, flown, etc. To keep dimensionality of the
 vector representation low, you should lemmatize your tokens.
 
+Stemming is the poor mans version of lemmatization.
+It uses hand-crafted rules to drop the ends of words to
+convert them into stems.
+
 ```{python}
 nlp = spacy.load("en_core_web_sm")
 
@@ -37,3 +41,43 @@ for token in doc:
 # indented (ex. print line above).
 ```
 
+## Categorizing sentences and documents
+
+Supervised document classification problems:
+  * assigning topic labels to sentences/documents
+  * predicting sentiment of reviews
+  * filtering spam emails
+  * identify language
+  * email triaging
+Semi-supervised document classification is extremely useful,
+but this book will not go into it.
+
+### POS (Part-of-speech) tagging and NER (Named-Entity recognition)
+
+```{python}
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Mary slapped the green witch.")
+print("Part-of-speech (POS) tagging")
+for token in doc:
+  print("{} - {}".format(token, token.pos_))
+print()
+
+print("Shallow-parsing - generates higher-order units composed of "
+      "noun, verb, etc.")
+for chunk in doc.noun_chunks:
+  print("{} - {}".format(chunk, chunk.label_))
+
+```
+
+The named entity is also very useful. It mentions a person name, location name,
+organization name, etc.
+
+### Identifying relationships between grammatical atoms in sentences
+
+Dependency parsing shows the grammatical relationships between parts of a
+sentence.
+
+### Word senses and semantics
+
+The different meanings of a word are it's senses.
+Wordnet aims to capture all the meanings of each word.
